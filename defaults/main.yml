@@ -1,0 +1,86 @@
+---
+
+awx_host_config_key: xxx-1123-abcd-3211-abcdefg
+awx_broadcast_websocket_secret: awx-broadcast-secret
+awx_secret_key: awx-secret-key
+
+awx_postgres_username: postgres
+awx_postgres_password: postgrespass
+awx_postgres_database: awx
+
+awx_host_port: 8080
+awx_server_url: 'http://awx.local:{{ awx_host_port }}'
+awx_admin_user: awxadmin
+awx_admin_passord: awxpassword
+
+organizations:
+  - name: My Organization
+    locations:
+      - name: Warehouse A
+      - name: ITC
+
+awx_inventories:
+  - name: Main Inventory
+    description: AWX's main inventory
+    organization: My Organization
+    variables:
+      test_a: 123
+
+awx_inventory_sources: []
+
+awx_credential_types:
+  - name: Foreman
+    description: Foreman dynamic inventory credentials
+    kind: cloud
+    inputs:
+    injectors:
+
+awx_credentials:
+  - name: Ansible Root
+    credential_type: Machine
+    inputs:
+      ssh_key_data: "{{ ansible_ssh_key }}"
+  - name: Ansible GitHub
+    credential_type: GitHub Personal Access Token
+    inputs:
+      token: '{{ awx_github_deploy_key }}'
+
+awx_projects:
+  - name: AWX Home Project
+    description: AWX project for home services
+    scm_type: git
+    scm_credentials: Ansible GitHub
+    scm_clean: true
+    scm_branch: main
+    scm_update_on_launch: true
+    scm_url: git@github.com:my/repo.git
+    local_path: awx-home
+
+foreman_admin_user: foremanadmin
+foreman_admin_password: foremanpass
+foreman_remote_execution_ssh_keys:
+  - '{{ foreman_ssh_public_key_data }}'
+foreman_bmc_username: admin
+foreman_bmc_password: bmcpass
+foreman_user_ssh_key_data: '{{ foreman_ssh_key_data }}'
+foreman_user_ssh_public_key_data: '{{ foreman_ssh_public_key_data }}'
+foreman_proxy_ssh_key_data: '{{ foreman_ssh_key_data }}'
+foreman_proxy_ssh_public_key_data: '{{ foreman_ssh_public_key_data }}'
+
+foreman_compute_plugins:
+  - libvirt
+
+foreman_internal_usergroups:
+  - name: administrators
+    admin: yes
+  - name: managers
+    admin: no
+    roles:
+      - Manager
+foreman_external_usergroups:
+  - name: admin
+    auth_source: LDAP Auth
+    usergroup: administrators
+  - name: users
+    auth_source: LDAP Auth
+    usergroup: managers
