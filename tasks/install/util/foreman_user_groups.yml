@@ -1,0 +1,25 @@
+---
+
+- name: Ensure Foreman user group exists
+  ansible.builtin.group:
+    name: '{{ foreman_user_group.name }}'
+    gid: '{{ foreman_user_group.gid }}'
+    state: '{{ foreman_user_group.state | default("present") }}'
+
+- name: Ensure Foreman user exists
+  ansible.builtin.user:
+    name: '{{ foreman_user_group.name }}'
+    uid: '{{ foreman_user_group.uid }}'
+    groups:
+      - '{{ foreman_user_group.name }}'
+    create_home: '{{ foreman_user_group.state | default("present") == "present" }}'
+    home: '{{ foreman_user_group.home_dir }}'
+    state: '{{ foreman_user_group.state | default("present") }}'
+
+- name: Process User Directory
+  ansible.builtin.include_tasks:
+    file: foreman_user_directories.yml
+  loop: '{{ foreman_user_group.directories | default([]) }}'
+  loop_control:
+    loop_var: foreman_user_directory
+    label: '{{ foreman_user_directory.name }}'

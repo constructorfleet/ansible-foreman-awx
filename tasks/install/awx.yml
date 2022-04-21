@@ -1,0 +1,38 @@
+---
+
+- name: Install Tower-CLI Python Package
+  ansible.builtin.pip:
+    name: ansible-tower-cli
+    state: present
+
+- name: Create Directory for Docker Compose Configuration Files
+  ansible.builtin.file:
+    path: "{{ awx_docker_compose_dir }}"
+    state: directory
+
+- name: Create Directory for Redis Socket
+  ansible.builtin.file:
+    path: "{{ awx_redis_socket_directory }}"
+    state: directory
+    mode: 0777
+
+- name: Render Docker Compose Configuration Files
+  ansible.builtin.template:
+    src: "awx/{{ item }}.j2"
+    dest: "{{ awx_docker_compose_dir }}/{{ item }}"
+  loop:
+    - environment.sh
+    - credentials.py
+    - nginx.conf
+    - redis.conf
+
+- name: Render SECRET_KEY file
+  ansible.builtin.copy:
+    content: "{{ awx_secret_key }}"
+    dest: "{{ awx_docker_compose_dir }}/SECRET_KEY"
+
+- name: Build Docker Compose Project
+  ansible.builtin.include_role:
+    name: docker
+  vars:
+    docker_compose_projects: "{{ awx_compose_project }}"

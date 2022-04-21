@@ -1,0 +1,48 @@
+---
+
+- name: Ensure Foreman User Directory Exists
+  ansible.builtin.file:
+    path: '{{ (foreman_user_group.home_dir, foreman_user_directory.name) | path_join }}'
+    mode: '{{ foreman_user_directory.mode }}'
+    owner: '{{ foreman_user_group.name }}'
+    group: '{{ foreman_user_group.name }}'
+    state: '{{ foreman_user_directory.state | default("directory") }}'
+
+- name: Ensure Foreman User Directory SymLink Path Exists
+  ansible.builtin.file:
+    path: '{{ foreman_user_directory.symlink | replace((foreman_user_directory.symlink | basename), "") }}'
+    owner: '{{ foreman_user_group.name }}'
+    group: '{{ foreman_user_group.name }}'
+    state: directory
+  when:
+    - foreman_user_directory is defined
+    - foreman_user_directory.symlink is defined
+    - foreman_user_directory.symlink is string
+
+- name: Ensure Foreman User Directory Is Symlinked
+  ansible.builtin.file:
+    src: '{{ (foreman_user_group.home_dir, foreman_user_directory.name) | path_join }}'
+    dest: '{{ foreman_user_directory.symlink }}'
+    owner: '{{ foreman_user_group.name }}'
+    group: '{{ foreman_user_group.name }}'
+    mode: '{{ foreman_user_directory.mode }}'
+    state: link
+  when:
+    - foreman_user_directory is defined
+    - foreman_user_directory.symlink is defined
+    - foreman_user_directory.symlink is string
+
+- name: Populate Foreman User Directory Files
+  ansible.builtin.copy:
+    src: '{{ foreman_user_file.source | default(omit) }}'
+    content: '{{ foreman_user_file.content | default(omit) }}'
+    dest: '{{ (foreman_user_group.home_dir, foreman_user_directory.name, foreman_user_file.dest) | path_join }}'
+    mode: '{{ foreman_user_file.mode }}'
+    decrypt: '{{ foreman_user_file.decrypt | default(omit) }}'
+    owner: '{{ foreman_user_group.name }}'
+    group: '{{ foreman_user_group.name }}'
+  loop: '{{ foreman_user_directory.files | default([]) }}'
+  loop_control:
+    loop_var: foreman_user_file
+    label: '{{ foreman_user_file.source }}'
+

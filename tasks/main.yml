@@ -1,0 +1,22 @@
+---
+
+- name: Install AWX
+  ansible.builtin.include_tasks:
+    file: install/awx.yml
+  tags:
+    - install-buildservices
+    - install-awx
+
+- name: Install Foreman
+  ansible.builtin.include_tasks:
+    file: install/foreman.yml
+  tags:
+    - install-buildservices
+    - install-foreman
+
+- name: Check AWX Installation Progress
+  ansible.builtin.include_tasks:
+    file: install/util/awx_install_complete_check.yml
+  tags:
+    - install-buildservices
+    - install-awx

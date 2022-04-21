@@ -1,0 +1,26 @@
+---
+
+- name: Ensure Foreman user/group/directories/files exist
+  ansible.builtin.include_tasks:
+    file: util/foreman_user_groups.yml
+  loop: '{{ foreman_users_groups }}'
+  loop_control:
+    loop_var: foreman_user_group
+    label: '{{ foreman_user_group.name }}'
+
+- ansible.builtin.include_role:
+    name: theforeman.operations.foreman_repositories
+
+- ansible.builtin.include_role:
+    name: theforeman.operations.ansible_repositories
+  when:
+    - ansible_os_family | lower != 'debian'
+
+- ansible.builtin.include_role:
+    name: theforeman.operations.puppet_repositories
+
+- ansible.builtin.include_role:
+    name: theforeman.operations.installer
+  vars:
+    update_cache: true
+    foreman_installer_options: "{{ ['--'] | product(foreman_options) | map('join') | list }}"

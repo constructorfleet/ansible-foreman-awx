@@ -1,0 +1,26 @@
+---
+
+- name: Check AWX Installation Complete via Ping API
+  ansible.builtin.uri:
+    url: '{{ awx_server_url }}/api/v2/ping'
+  retries: 300
+  delay: 5
+  until: awx_ping_result.status == 200
+  register: awx_ping_result
+  changed_when: '{{ awx_ping_result.status == 200 }}'
+  no_log: true
+  ignore_errors: true
+
+- name: Assert AWX Install/Upgrade Complete
+  ansible.builtin.assert:
+    that:
+      - '{{ awx_ping_result is not failed }}'
+    fail_msg: 'AWX Install/Upgrade is taking awhile, come back later for configuration.'
+    success_msg: 'AWX Install/Upgrade is complete!'
+
+- name: Update CA Trust in AWX Containers
+  ansible.builtin.command:
+    cmd: "docker exec {{ item }} '/usr/bin/update-ca-trust'"
+  loop:
+    - awx-web
+    - awx-task
