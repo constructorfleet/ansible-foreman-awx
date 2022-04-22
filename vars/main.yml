@@ -7,6 +7,9 @@ awx_secret_key_file_path: '{{ awx_docker_compose_directory }}/SECRET_KEY'
 awx_postgres_hostname: awx-postgres
 awx_postgres_port: 5432
 
+awx_foreman_inventory:
+  -
+
 awx_compose_project:
   - project_name: awx
     pull: yes
@@ -148,3 +151,110 @@ foreman_options: |-
     foreman_base_options
       + (['enable-foreman-compute-'] | product(foreman_compute_plugins) | map('join') | list)
   }}
+
+foreman_auth_sources_ldap: |
+  {%- set ns = namespace(items=[]) -%}
+  {%- for ldap_authentication in ldap_authentication_sources -%}
+    {%- set ns.items = ns.items + [
+          {
+            'name': ldap_authentication.name,
+            'host': ldap_authentication.host,
+            'port': ldap_authentication.server_port,
+            'tls': ldap_authentication.server_tls,
+            'onthefly_register': True,
+            'server_type': 'posix',
+            'account': ldap_authentication.account,
+            'account_password': ldap_authentication.account_password,
+            'base_dn': ldap_authentication.base_dn,
+            'groups_base': ldap_authentication.groups_base,
+            'attr_login': ldap_authentication.attr_login,
+            'attr_firstname': ldap_authentication.attr_firstname,
+            'attr_lastname': ldap_authentication.attr_lastname,
+            'attr_mail': ldap_authentication.attr_mail,
+            'usergroup_sync': True,
+            'organizations': ldap_authentication.organizations
+                | default([])
+            'locations': organizations
+                | selectattr('name', 'in', ldap_authentication.organizations | default([]))
+                | map(attribute='locations', default=[])
+                | flatten
+                | default([])
+          }
+        ]
+    -%}
+  {%- endfor -%}
+  {{ ns.items }}
+
+awx_auth_sources_ldap: |
+  {%- set ns=namespace(items=[], org_map={}) -%}
+  {%- for ldap_authentication in ldap_authentication_sources -%}
+    {%- set ldap_number = '' if loop.index0 == 0 else ((loop.index0 | string) ~ '_') -%}
+    {%- set prefix = 'AUTH_LDAP_' ~ ldap_number -%}
+    {%- set ns.org_map = {} -%}
+    {%- for org in ldap_authentication.organizations -%}
+      {%- set ns.org_map = ns.org_map | combine(
+          {
+            org.name: {
+              'admins': 'cn=' ~ org.admin_group_cn ~ ',' ~ ldap_authentication.groups_base,
+              'users': 'cn=' ~ org.user_group_cn ~ ',' ~ ldap_authentication.groups_base,
+              'remove_users': False,
+              'remove_admins': False
+            }
+          }
+        )
+      -%}
+    {%- endfor -%}
+    {%- set ns.items = ns.items + [
+          {
+            'name': prefix ~ 'SERVER_URI',
+            'value': 'ldap://' ~ ldap_authentication.host ~ ':' ~ ldap_authentication.port
+          },
+          {
+            'name': prefix ~ 'BIND_DN',
+            'value': ldap_authentication.account
+          },
+          {
+            'name': prefix ~ 'BIND_PASSWORD',
+            'value': ldap_authentication.account_password
+          },
+          {
+            'name': prefix ~ 'GROUP_TYPE',
+            'value': 'PosixGroupType'
+          },
+          {
+            'name': prefix ~ 'GROUP_TYPE_PARAMS',
+            'value': {
+              'name_attr': cn
+            }
+          },
+          {
+            'name': prefix ~ 'USER_SEARCH',
+            'value': [
+              ldap_authentication.users_base,
+              'SCOPE_SUBTREE',
+              '(uid=%(user)s)'
+            ]
+          },
+          {
+            'name': prefix ~ 'GROUP_SEARCH',
+            'value': [
+              ldap_authentication.groups_base,
+              'SCOPE_SUBTREE',
+              '(objectClass=posixGroup)'
+            ]
+          },
+          {
+            'name': prefix ~ 'USER_ATTR_MAP',
+            'value': {
+              'first_name': ldap_authentication.attr_firstname,
+              'last_name': ldap_authentication.attr_lastname,
+              'email': ldap_authentication.attr_mail
+            }
+          },
+          {
+            'name': prefix ~ 'ORGANIZATION_MAP',
+            'value': ns.org_map
+          }
+        ]
+  {%- endfor -%}
+  {{ ns.items }}

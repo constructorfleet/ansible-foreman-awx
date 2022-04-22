@@ -1,0 +1,75 @@
+---
+
+- name: Authenticate and Configure AWX
+  block:
+    - name: Create AWX OAuth Token
+      awx.awx.tower_token:
+        description: Build Server Configuring AWX
+        scope: write
+        state: present
+        validate_certs: '{{ awx_validate_certs }}'
+        tower_host: "{{ awx_server_url }}"
+        tower_username: "{{ awx_admin_user }}"
+        tower_password: "{{ awx_admin_password }}"
+
+    - name: Create Additional Tower Credential Types
+      awx.awx.tower_credential_type:
+        name: "{{ item.name }}"
+        description: "{{ item.description | default(omit) }}"
+        kind: "{{ item.kind }}"
+        inputs: "{{ item.inputs | default(omit) }}"
+        injectors: "{{ item.injectors | default(omit) }}"
+        state: "{{ item.state | default('present') }}"
+        validate_certs: '{{ awx_validate_certs }}'
+        tower_host: "{{ awx_server_url }}"
+        tower_oauthtoken: '{{ tower_token }}'
+      loop: "{{ awx_credential_types }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Create Tower Credentials
+      awx.awx.tower_credential:
+        name: "{{ item.name }}"
+        organization: "{{ item.organization | default('Default') }}"
+        state: "{{ item.state | default('present') }}"
+        inputs: "{{ item.inputs|default(omit) }}"
+        credential_type: "{{ item.credential_type }}"
+        validate_certs: '{{ awx_validate_certs }}'
+        tower_host: "{{ awx_server_url }}"
+        tower_oauthtoken: '{{ tower_token }}'
+      loop: "{{ awx_credentials }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Create AWX Organizations
+      awx.awx.tower_organization:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+        validate_certs: '{{ awx_validate_certs }}'
+        tower_host: "{{ awx_server_url }}"
+        tower_oauthtoken: '{{ tower_token }}'
+      loop: '{{ organizations }}'
+      loop_control:
+        label: '{{ item.name }}'
+
+    - name: Update AWX LDAP Settings
+      awx.awx.tower_settings:
+        settings: "{{ awx_auth_sources_ldap | items2dict(key_name='name', value_name='value') | default([]) }}"
+        validate_certs: '{{ awx_validate_certs }}'
+        tower_host: "{{ awx_server_url }}"
+        tower_oauthtoken: '{{ tower_token }}'
+      when:
+        - awx_ldap_settings is defined
+        - awx_ldap_settings is sequence
+  always:
+    - name: Delete AWX OAuth Token
+      awx.awx.tower_token:
+        existing_token: '{{ tower_token }}'
+        state: absent
+        validate_certs: '{{ awx_validate_certs }}'
+        tower_host: "{{ awx_server_url }}"
+        tower_oauthtoken: '{{ tower_token }}'
+        tower_username: "{{ awx_admin_user }}"
+        tower_password: "{{ awx_admin_passward }}"
+      when:
+        - tower_token is defined

@@ -20,3 +20,21 @@
   tags:
     - install-buildservices
     - install-awx
+
+- name: Configure AWX
+  ansible.builtin.include_tasks:
+    file: configure/awx.yml
+  tags:
+    - install-buildservices
+    - install-awx
+    - configure-buildservices
+    - configure-awx
+
+- name: Configure Foreman
+  ansible.builtin.include_tasks:
+    file: configure/foreman.yml
+  tags:
+    - install-buildservices
+    - install-foreman
+    - configure-buildservices
+    - configure-foreman

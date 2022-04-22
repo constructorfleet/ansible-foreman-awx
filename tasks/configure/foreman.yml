@@ -1,0 +1,8 @@
+---
+
+- name: Configure Foreman LDAP Authentication Sources
+  ansible.builtin.include_role:
+    name: theforeman.foreman.auth_sources_ldap
+  when:
+    - foreman_auth_sources_ldap is defined
+    - foreman_auth_sources_ldap is sequence

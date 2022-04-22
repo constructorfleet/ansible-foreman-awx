@@ -10,30 +10,51 @@ awx_postgres_database: awx
 
 awx_host_port: 8080
 awx_server_url: 'http://awx.local:{{ awx_host_port }}'
+awx_validate_certs: false
 awx_admin_user: awxadmin
 awx_admin_passord: awxpassword
 
+ldap_authentication_sources:
+  - name: Local LDAP
+    host: 10.0.10.3
+    server: ldap.net.local
+    server_port: 389
+    server_tls: false
+    account: cn=Manager,dc=ldap,dc=net,dc=local
+    account_password: ldappassword
+    base_dn: dc=ldap,dc=net,dc=local
+    groups_base: ou=groups,dc=ldap,dc=net,dc=local
+    users_base: ou=users,dc=ldap,dc=net,dc=local
+    attr_login: uid
+    attr_firstname: givenName
+    attr_lastname: sn
+    attr_mail: mail
+    organizations:
+      - name: Default
+        admin_group_cn: admin
+        user_group_cn: users
+
 organizations:
-  - name: My Organization
+  - name: Default
     locations:
+      - name: Default
       - name: Warehouse A
       - name: ITC
 
-awx_inventories:
-  - name: Main Inventory
-    description: AWX's main inventory
-    organization: My Organization
-    variables:
-      test_a: 123
+awx_settings:
+  - name: SESSION_COOKIE_AGE
+    value: "28800"
 
-awx_inventory_sources: []
+awx_foreman_inventory_config:
+  credential_name:
+  name: Foreman Inventory
+  organization: Default
 
-awx_credential_types:
-  - name: Foreman
-    description: Foreman dynamic inventory credentials
-    kind: cloud
-    inputs:
-    injectors:
+awx_extra_inventories: []
+
+awx_extra_inventory_sources: []
+
+awx_extra_credential_types: []
 
 awx_credentials:
   - name: Ansible Root
