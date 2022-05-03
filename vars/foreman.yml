@@ -11,6 +11,31 @@ foreman_proxy_ssh_private_key: '{{ lookup("file", foreman_proxy_private_ssh_file
 foreman_proxy_ssl: '{{ foreman_proxy_url | urlsplit("scheme") == "https" }}'
 foreman_proxy_port: '{{ foreman_proxy_url | urlsplit("port") }}'
 
+foreman_global_parameters:
+  - name: remote_execution_ssh_keys
+    parameter_type: array
+    value:
+      - "{{ foreman_ssh_public_key }}"
+  - name: ansible_host_config_key
+    value: "{{ awx_host_config_key }}"
+  - name: ansible_tower_fqdn
+    value: "{{ awx_url }}"
+  - name: ansible_enabled
+    parameter_type: boolean
+    value: "True"
+  - name: ansible_tower_provisioning
+    parameter_type: boolean
+    value: "True"
+  - name: kernel_params
+    parameter_type: string
+    value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0 nosplash"
+  - name: bmc_user
+    parameter_type: string
+    value: ADMIN
+  - name: bmc_password
+    parameter_type: string
+    value: "{{ foreman_bmc_password }}"
+
 foreman_system_users_groups:
   - name: foreman
     uid: 998
@@ -20,10 +45,10 @@ foreman_system_users_groups:
       - name: .ssh
         mode: '0755'
         files:
-          - content: '{{ foreman_user_ssh_key_data }}'
+          - content: '{{ foreman_ssh_private_key }}'
             dest: id_rsa
             mode: '0600'
-          - content: '{{ foreman_user_ssh_public_key_data }}'
+          - content: '{{ foreman_ssh_public_key }}'
             dest: id_rsa.pub
             mode: '0644'
   - name: foreman-proxy
@@ -34,10 +59,10 @@ foreman_system_users_groups:
       - name: .ssh
         mode: '0755'
         files:
-          - content: '{{ foreman_proxy_ssh_key_data }}'
+          - content: '{{ foreman_proxy_ssh_private_key }}'
             dest: id_rsa_foreman_proxy
             mode: '0600'
-          - content: '{{ foreman_proxy_ssh_public_key_data }}'
+          - content: '{{ foreman_proxy_ssh_public_key }}'
             dest: id_rsa_foreman_proxy.pub
             mode: '0644'
 

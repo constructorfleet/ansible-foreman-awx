@@ -1,6 +1,10 @@
 ---
 
 foreman_url: https://10.0.10.155
+foreman_url_valdiate_certs: false
+foreman_admin_username: foreman
+foreman_admin_password: foremenpass
+foreman_bmc_password: ADMIN
 foreman_proxy_url: http://10.0.10.155
 foreman_tftp_root: /var/lib/tftpboot
 foreman_private_ssh_file: id_rsa.foreman
@@ -365,6 +369,7 @@ awx_postgres_admin_password: postgrespass
 awx_github_deploy_key_file: id_rsa_github
 enable_awx_ldap_authentication: true
 awx_secret_key: shared_secret
+awx_host_config_key: 9931bad6-6526-4bf7-81b0-d56e67df3e00
 
 awx_inventories:
   - name: DEV - PrettyBaked.com
