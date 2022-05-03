@@ -5,7 +5,7 @@ galaxy_info:
 
   # If the issue tracker for your role is not on github, uncomment the
   # next line and provide a value
-  # issue_tracker_url: http://example.com/issue/tracker
+  issue_tracker_url: http://github.com/constructorfleet/ansible-foreman-awx/issue/tracker
 
   # Choose a valid license ID from https://spdx.org - some suggested licenses:
   # - BSD-3-Clause (default)
@@ -45,6 +45,13 @@ galaxy_info:
     - Provisoning
     - Configuration
 
-dependencies: []
-  # List your role dependencies here, one per line. Be sure to remove the '[]' above,
-  # if you add dependencies to this list.
+dependencies:
+  - src: https://github.com/ajanis/ansible-docker.git
+    name: docker
+    version: v3.7
+  - src: https://github.com/ajanis/ansible-tftp.git
+    name: tftp
+    version: 40f2b680c858ecb5203598066716244e34b81fab
+  - src: https://github.com/ajanis/ansible-isc_bind_server.git
+    name: isc_bind_server
+    version: master
