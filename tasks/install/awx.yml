@@ -36,7 +36,3 @@
     name: docker
   vars:
     docker_compose_projects: "{{ awx_compose_project }}"
-
-- name: Poll up status of AWX
-  ansible.builtin.include_tasks:
-    file: util/awx_install_complete_check.yml
