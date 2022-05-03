@@ -1,22 +1,22 @@
 ---
 
-- name: Install Tower-CLI Python Package
+- name: Install Tower-CLI package
   ansible.builtin.pip:
     name: ansible-tower-cli
     state: present
 
-- name: Create Directory for Docker Compose Configuration Files
+- name: Create {{ awx_docker_compose_dir }} directory
   ansible.builtin.file:
     path: "{{ awx_docker_compose_dir }}"
     state: directory
 
-- name: Create Directory for Redis Socket
+- name: Create Redis socket directory
   ansible.builtin.file:
-    path: "{{ awx_redis_socket_directory }}"
+    path: "{{ awx_docker_compose_dir }}/redis_socket"
     state: directory
     mode: 0777
 
-- name: Render Docker Compose Configuration Files
+- name: Create Docker Compose Configuration
   ansible.builtin.template:
     src: "awx/{{ item }}.j2"
     dest: "{{ awx_docker_compose_dir }}/{{ item }}"
@@ -36,3 +36,7 @@
     name: docker
   vars:
     docker_compose_projects: "{{ awx_compose_project }}"
+
+- name: Poll up status of AWX
+  ansible.builtin.include_tasks:
+    file: util/awx_install_complete_check.yml

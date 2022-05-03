@@ -351,6 +351,9 @@ foreman_operating_systems:
         value: "disabled"
 
 awx_url: http://10.0.10.155:8080
+awx_validate_ssl: false
+awx_admin_username: awx
+awx_admin_password: awxpass
 awx_docker_compose_dir: /var/lib/awxcompose
 awx_postgres_data_dir: /var/lib/awxpostgres
 awx_project_data_dir: /etc/ansible

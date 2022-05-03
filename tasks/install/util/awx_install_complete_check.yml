@@ -2,7 +2,7 @@
 
 - name: Check AWX Installation Complete via Ping API
   ansible.builtin.uri:
-    url: '{{ awx_server_url }}/api/v2/ping'
+    url: '{{ awx_url }}/api/v2/ping'
   retries: 300
   delay: 5
   until: awx_ping_result.status == 200
@@ -21,6 +21,20 @@
 - name: Update CA Trust in AWX Containers
   ansible.builtin.command:
     cmd: "docker exec {{ item }} '/usr/bin/update-ca-trust'"
+  loop:
+    - awx-web
+    - awx-task
+
+- name: Install Tower CLI Python Package
+  ansible.builtin.command:
+    cmd: "docker exec {{ item }} '/usr/bin/python3' '-m' 'pip' 'install' '--upgrade' 'ansible-tower-cli'"
+  loop:
+    - awx-web
+    - awx-task
+
+- name: Install Tower CLI Python Package
+  ansible.builtin.command:
+    cmd: "docker exec {{ item }} '/usr/bin/python3' '-m' 'pip' 'install' '--upgrade' 'jmespath'"
   loop:
     - awx-web
     - awx-task
