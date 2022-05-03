@@ -1,0 +1,60 @@
+---
+foreman_repositories_version: "3.2"
+foreman_installer_scenario: foreman
+foreman_puppet_repositories_version: 7
+
+foreman_ssh_public_key: '{{ lookup("file", foreman_public_ssh_file) }}'
+foreman_ssh_private_key: '{{ lookup("file", foreman_private_ssh_file) }}'
+foreman_proxy_ssh_public_key: '{{ lookup("file", foreman_proxy_public_ssh_file) }}'
+foreman_proxy_ssh_private_key: '{{ lookup("file", foreman_proxy_private_ssh_file) }}'
+
+foreman_proxy_ssl: '{{ foreman_proxy_url | urlsplit("scheme") == "https" }}'
+foreman_proxy_port: '{{ foreman_proxy_url | urlsplit("port") }}'
+
+foreman_system_users_groups:
+  - name: foreman
+    uid: 998
+    gid: 998
+    home_dir: /usr/share/foreman
+    directories:
+      - name: .ssh
+        mode: '0755'
+        files:
+          - content: '{{ foreman_user_ssh_key_data }}'
+            dest: id_rsa
+            mode: '0600'
+          - content: '{{ foreman_user_ssh_public_key_data }}'
+            dest: id_rsa.pub
+            mode: '0644'
+  - name: foreman-proxy
+    uid: 997
+    gid: 997
+    home_dir: /usr/share/foreman-proxy
+    directories:
+      - name: .ssh
+        mode: '0755'
+        files:
+          - content: '{{ foreman_proxy_ssh_key_data }}'
+            dest: id_rsa_foreman_proxy
+            mode: '0600'
+          - content: '{{ foreman_proxy_ssh_public_key_data }}'
+            dest: id_rsa_foreman_proxy.pub
+            mode: '0644'
+
+foreman_auth_sources_ldap:
+  - name: '{{ ldap_authentication.server }}'
+    host: '{{ ldap_authentication.host }}'
+    port: '{{ ldap_authentication.server_port }}'
+    tls: '{{ ldap_authentication.server_tls }}'
+    onthefly_register: true
+    server_type: posix
+    account: '{{ ldap_authentication.account_dn }}'
+    account_password: '{{ ldap_authentication.account_password }}'
+    base_dn: '{{ ldap_authentication.base_dn }}'
+    groups_base: '{{ ldap_authentication.groups_base }}'
+    attr_login: '{{ ldap_authentication.attr_login }}'
+    attr_firstname: '{{ ldap_authentication.attr_firstname }}'
+    attr_lastname: '{{ ldap_authentication.attr_lastname }}'
+    attr_mail: '{{ ldap_authentication.attr_mail }}'
+    ldap_filter: (&(objectClass=posixAccount)(|(gidNumber=1042)(gidNumber=2002)))
+    usergroup_sync: true
