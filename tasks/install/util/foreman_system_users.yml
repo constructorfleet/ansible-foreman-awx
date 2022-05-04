@@ -6,6 +6,8 @@
     gid: '{{ foreman_system_user.gid }}'
     state: '{{ foreman_system_user.state | default("present") }}'
   failed_when: false
+  tags:
+    - always
 
 - name: Ensure Foreman user exists
   ansible.builtin.user:
@@ -17,6 +19,8 @@
     home: '{{ foreman_system_user.home_dir }}'
     state: '{{ foreman_user_group.state | default("present") }}'
   failed_when: false
+  tags:
+    - always
 
 - name: Process User Directory
   ansible.builtin.include_tasks:
@@ -25,3 +29,5 @@
   loop_control:
     loop_var: foreman_user_directory
     label: '{{ foreman_system_user.name }}'
+  tags:
+    - always

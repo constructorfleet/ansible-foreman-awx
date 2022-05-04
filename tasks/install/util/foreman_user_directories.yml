@@ -7,6 +7,8 @@
     owner: '{{ foreman_system_user.name }}'
     group: '{{ foreman_system_user.name }}'
     state: '{{ foreman_user_directory.state | default("directory") }}'
+  tags:
+    - always
 
 - name: Ensure Foreman User Directory SymLink Path Exists
   ansible.builtin.file:
@@ -18,6 +20,8 @@
     - foreman_user_directory is defined
     - foreman_user_directory.symlink is defined
     - foreman_user_directory.symlink is string
+  tags:
+    - always
 
 - name: Ensure Foreman User Directory Is Symlinked
   ansible.builtin.file:
@@ -31,6 +35,8 @@
     - foreman_user_directory is defined
     - foreman_user_directory.symlink is defined
     - foreman_user_directory.symlink is string
+  tags:
+    - always
 
 - name: Populate Foreman User Directory Files
   ansible.builtin.copy:
@@ -44,3 +50,5 @@
   loop_control:
     loop_var: foreman_user_file
     label: '{{ foreman_user_file.source }}'
+  tags:
+    - always

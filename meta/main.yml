@@ -2,6 +2,8 @@ galaxy_info:
   author: Teagan Glenn
   description: Install and configure a build pipeline using Foreman and AWX
   company: Constructorfleet
+  role_name: ansible_foreman_awx
+  namespace: constructorfleet
 
   # If the issue tracker for your role is not on github, uncomment the
   # next line and provide a value
@@ -45,13 +47,4 @@ galaxy_info:
     - Provisoning
     - Configuration
 
-dependencies:
-  - src: https://github.com/ajanis/ansible-docker.git
-    name: docker
-    version: v3.7
-  - src: https://github.com/ajanis/ansible-tftp.git
-    name: tftp
-    version: 40f2b680c858ecb5203598066716244e34b81fab
-  - src: https://github.com/ajanis/ansible-isc_bind_server.git
-    name: isc_bind_server
-    version: master
+dependencies: []

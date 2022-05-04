@@ -5,10 +5,15 @@ awx_port: '{{  awx_url | urlsplit("port") }}'
 
 awx_ldap_org_map_jq: >-
   [*].{
-  org: name,
-  groups: {
-  admins: join(`,`, [join(``, [`cn=`, usergroups[?admin].ldap_cn | [0]]), `|groups_base|`]),
-  users: join(`,`, [join(``, [`cn=`, usergroups[?!admin].ldap_cn | [0]]), `|groups_base|`])}}
+    org: name,
+    groups: {
+      admins: join(`,`, [join(``, [`cn=`, usergroups[?admin].ldap_cn | [0]]), `|groups_base|`]),
+      users: join(`,`, [join(``, [`cn=`, usergroups[?!admin].ldap_cn | [0]]), `|groups_base|`])
+    }
+  }
+
+awx_ldap_org_map_json: "{{ organizations | community.general.json_query(awx_ldap_org_map_jq) | to_json }}"
+awx_ldap_org_map_ldap: "{{ awx_ldap_org_map_json | replace('|groups_base|', ldap_authentication.groups_base) }}"
 
 awx_ldap_auth:
   - name: SESSION_COOKIE_AGE
@@ -44,15 +49,7 @@ awx_ldap_auth:
   - name: AUTH_LDAP_BIND_PASSWORD
     value: "{{ ldap_authentication.account_password }}"
   - name: AUTH_LDAP_ORGANIZATION_MAP
-    value: |-
-       {{
-          organizations
-            | community.general.json_query(awx_ldap_org_map_jq)
-            | to_json
-            | replace('|groups_base|', ldap_authentication.groups_base)
-            | from_json
-            | items2dict(key_name='org', value_name='groups')
-      }}
+    value: "{{ awx_ldap_org_map_ldap | from_json | items2dict(key_name='org', value_name='groups') }}"
 
 awx_compose_project:
   - project_name: awx
