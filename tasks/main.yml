@@ -1,8 +1,21 @@
 ---
 
+- name: Include variables
+  ansible.builtin.include_vars:
+    file: '{{ item }}'
+  loop:
+    - awx.yml
+    - foreman.yml
+  tags:
+    - always
+
 - name: Install AWX
   ansible.builtin.include_tasks:
     file: install/awx.yml
+    apply:
+      tags:
+        - install-buildservices
+        - install-awx
   tags:
     - install-buildservices
     - install-awx
@@ -10,6 +23,10 @@
 - name: Install Foreman
   ansible.builtin.include_tasks:
     file: install/foreman.yml
+    apply:
+      tags:
+        - install-buildservices
+        - install-foreman
   tags:
     - install-buildservices
     - install-foreman
@@ -17,6 +34,10 @@
 - name: Check AWX Installation Progress
   ansible.builtin.include_tasks:
     file: install/util/awx_install_complete_check.yml
+    apply:
+      tags:
+        - install-buildservices
+        - install-awx
   tags:
     - install-buildservices
     - install-awx
@@ -24,6 +45,12 @@
 - name: Configure AWX
   ansible.builtin.include_tasks:
     file: configure/awx.yml
+    apply:
+      tags:
+        - install-buildservices
+        - install-awx
+        - configure-buildservices
+        - configure-awx
   tags:
     - install-buildservices
     - install-awx
@@ -33,6 +60,12 @@
 - name: Configure Foreman
   ansible.builtin.include_tasks:
     file: configure/foreman.yml
+    apply:
+      tags:
+        - install-buildservices
+        - install-foreman
+        - configure-buildservices
+        - configure-foreman
   tags:
     - install-buildservices
     - install-foreman

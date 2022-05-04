@@ -2,11 +2,14 @@
 
 - name: Ensure Foreman user/group/directories/files exist
   ansible.builtin.include_tasks:
-    file: util/foreman_user_groups.yml
-  loop: '{{ foreman_users_groups }}'
+    file: util/foreman_system_users.yml
+    apply:
+      tags:
+        - always
+  loop: '{{ foreman_system_users_groups }}'
   loop_control:
-    loop_var: foreman_user_group
-    label: '{{ foreman_user_group.name }}'
+    loop_var: foreman_system_user
+    label: '{{ foreman_system_user.name }}'
 
 - ansible.builtin.include_role:
     name: theforeman.operations.foreman_repositories

@@ -1,107 +1,454 @@
 ---
 
-awx_host_config_key: xxx-1123-abcd-3211-abcdefg
-awx_broadcast_websocket_secret: awx-broadcast-secret
-awx_secret_key: awx-secret-key
+foreman_url: https://10.0.10.155
+foreman_url_valdiate_certs: false
+foreman_admin_username: foreman
+foreman_admin_password: foremenpass
+foreman_bmc_password: ADMIN
+foreman_proxy_url: http://10.0.10.155
+foreman_tftp_root: /var/lib/tftpboot
+foreman_private_ssh_file: id_rsa.foreman
+foreman_public_ssh_file: id_rsa.foreman.pub
+foreman_proxy_private_ssh_file: id_rsa_foreman_proxy
+foreman_proxy_public_ssh_file: id_rsa_foreman_proxy.pub
+enable_foreman_ldap_authentication: true
+foreman_compute_resources:
+  - name: dev01.dev.home.prettybaked.com
+    provider: libvirt
+    provider_params:
+      url: qemu+tcp://10.0.100.100/system
+      display_type: vnc
+foreman_installation_media:
+  - name: CentOS 8 mirror
+    os_family: Redhat
+    state: absent
+  - name: CentOS 9 Stream
+    os_family: Redhat
+    path: http://mirror.stream.centos.org/$major-stream/BaseOS/$arch/os
 
-awx_postgres_username: postgres
-awx_postgres_password: postgrespass
+foreman_operating_systems:
+  - name: "Ubuntu"
+    description: "Ubuntu 18.04.3 LTS"
+    release_name: "bionic"
+    family: "Debian"
+    major: "18"
+    minor: "04.3"
+    provisioning_templates:
+      - "Preseed default iPXE"
+      - "Preseed default"
+      - "Preseed default PXELinux"
+      - "Preseed default finish"
+      - "Preseed default user data"
+    partion_tables:
+      - "Preseed default"
+      - "Preseed default LVM"
+    architectures:
+      - x86_64
+    media: "Ubuntu mirror"
+    parameters:
+      - name: additional-packages
+        parameter_type: yaml
+        value:
+          - curl
+          - net-tools
+          - ethtool
+      - name: kernel_params
+        parameter_type: string
+        value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0 nosplash"
+      - name: partitioning-type
+        parameter_type: string
+        value: "general"
+      - name: partitioning-recipe
+        parameter_type: string
+        value: "atomic"
+  - name: "Ubuntu"
+    description: "Ubuntu 18.04.2 LTS"
+    release_name: "bionic"
+    family: "Debian"
+    major: "18"
+    minor: "04.2"
+    provisioning_templates:
+      - "Preseed default iPXE"
+      - "Preseed default"
+      - "Preseed default PXELinux"
+      - "Preseed default finish"
+      - "Preseed default user data"
+    partition_tables:
+      - "Preseed default"
+      - "Preseed default LVM"
+    architectures:
+      - x86_64
+    media: "Ubuntu mirror"
+    parameters:
+      - name: additional-packages
+        parameter_type: yaml
+        value:
+          - curl
+          - net-tools
+          - ethtool
+      - name: kernel_params
+        parameter_type: string
+        value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0 nosplash"
+      - name: partitioning-type
+        parameter_type: string
+        value: "general"
+      - name: partitioning-recipe
+        parameter_type: string
+        value: "atomic"
+  - name: "Ubuntu"
+    description: "Ubuntu 18.04"
+    release_name: "bionic"
+    family: "Debian"
+    major: "18"
+    minor: "04"
+    provisioning_templates:
+      - "Preseed default iPXE"
+      - "Preseed default"
+      - "Preseed default PXELinux"
+      - "Preseed default finish"
+      - "Preseed default user data"
+    partition_tables:
+      - "Preseed default"
+      - "Preseed default LVM"
+    architectures:
+      - x86_64
+    media: "Ubuntu mirror"
+    parameters:
+      - name: additional-packages
+        parameter_type: yaml
+        value:
+          - curl
+          - net-tools
+          - ethtool
+      - name: kernel_params
+        parameter_type: string
+        value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0 nosplash"
+      - name: partitioning-type
+        parameter_type: string
+        value: "general"
+      - name: partitioning-recipe
+        parameter_type: string
+        value: "atomic"
+  - name: "Ubuntu"
+    description: "Ubuntu 20.04"
+    release_name: "focal"
+    family: "Debian"
+    major: "20"
+    minor: "04"
+    provisioning_templates:
+      - "Preseed default iPXE"
+      - "Preseed default"
+      - "Preseed default PXELinux"
+      - "Preseed default finish"
+      - "Preseed default user data"
+    partion_tables:
+      - "Preseed default"
+      - "Preseed default LVM"
+    architectures:
+      - x86_64
+    media: "Ubuntu mirror"
+    parameters:
+      - name: additional-packages
+        parameter_type: yaml
+        value:
+          - curl
+          - net-tools
+          - ethtool
+      - name: kernel_params
+        parameter_type: string
+        value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0 nosplash"
+      - name: partitioning-type
+        parameter_type: string
+        value: "general"
+      - name: partitioning-recipe
+        parameter_type: string
+        value: "atomic"
+  - name: "CentOS"
+    description: "CentOS 7.7"
+    family: "Redhat"
+    major: "7"
+    minor: "7"
+    provisioning_templates:
+      - "Kickstart default iPXE"
+      - "Kickstart default"
+      - "Kickstart default PXELinux"
+      - "Kickstart default finish"
+      - "Kickstart default user data"
+    partion_tables:
+      - "Kickstart default"
+      - "Kickstart default thin"
+    architectures:
+      - x86_64
+    media: "CentOS 7 mirror"
+    parameters:
+      - name: additional-packages
+        parameter_type: yaml
+        value:
+          - net-tools
+          - redhat-lsb
+      - name: autopart_options
+        parameter_type: string
+        value: "--type=plain --nohome --fstype=ext4"
+      - name: kernel_params
+        parameter_type: string
+        value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0"
+      - name: selinux-mode
+        parameter_type: string
+        value: "disabled"
+  - name: "CentOS"
+    description: "CentOS 8.0"
+    family: "Redhat"
+    major: "8"
+    minor: "0"
+    provisioning_templates:
+      - "Kickstart default iPXE"
+      - "Kickstart default"
+      - "Kickstart default PXELinux"
+      - "Kickstart default finish"
+      - "Kickstart default user data"
+    partion_tables:
+      - "Kickstart default"
+      - "Kickstart default thin"
+    architectures:
+      - x86_64
+    media: "CentOS Stream"
+    parameters:
+      - name: additional-packages
+        parameter_type: yaml
+        value:
+          - net-tools
+          - redhat-lsb
+      - name: autopart_options
+        parameter_type: string
+        value: "--type=plain --nohome --fstype=ext4"
+      - name: kernel_params
+        parameter_type: string
+        value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0"
+      - name: selinux-mode
+        parameter_type: string
+        value: "disabled"
+  - name: "CentOS"
+    description: "CentOS 8.1"
+    family: "Redhat"
+    major: "8"
+    minor: "1"
+    provisioning_templates:
+      - "Kickstart default iPXE"
+      - "Kickstart default"
+      - "Kickstart default PXELinux"
+      - "Kickstart default finish"
+      - "Kickstart default user data"
+    partition_tables:
+      - "Kickstart default"
+      - "Kickstart default thin"
+    architectures:
+      - x86_64
+    media: "CentOS Stream"
+    parameters:
+      - name: additional-packages
+        parameter_type: yaml
+        value:
+          - net-tools
+          - redhat-lsb
+      - name: autopart_options
+        parameter_type: string
+        value: "--type=plain --nohome --fstype=ext4"
+      - name: kernel_params
+        parameter_type: string
+        value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0"
+      - name: selinux-mode
+        parameter_type: string
+        value: "disabled"
+  - name: "CentOS"
+    description: "CentOS Linux release 8.2.2004 (Core)"
+    family: "Redhat"
+    major: "8"
+    minor: "2.2004"
+    provisioning_templates:
+      - "Kickstart default iPXE"
+      - "Kickstart default"
+      - "Kickstart default PXELinux"
+      - "Kickstart default finish"
+      - "Kickstart default user data"
+    partition_tables:
+      - "Kickstart default"
+      - "Kickstart default thin"
+    architectures:
+      - x86_64
+    media: "CentOS Stream"
+    parameters:
+      - name: additional-packages
+        parameter_type: yaml
+        value:
+          - net-tools
+          - redhat-lsb
+      - name: autopart_options
+        parameter_type: string
+        value: "--type=plain --nohome --fstype=ext4"
+      - name: kernel_params
+        parameter_type: string
+        value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0"
+      - name: selinux-mode
+        parameter_type: string
+        value: "disabled"
+  - name: "CentOS"
+    description: "CentOS Linux release 8.4.2105"
+    family: "Redhat"
+    major: "8"
+    minor: "4.2105"
+    provisioning_templates:
+      - "Kickstart default iPXE"
+      - "Kickstart default"
+      - "Kickstart default PXELinux"
+      - "Kickstart default finish"
+      - "Kickstart default user data"
+    partition_tables:
+      - "Kickstart default"
+    architectures:
+      - x86_64
+    media: "CentOS Stream"
+    parameters:
+      - name: additional-packages
+        parameter_type: yaml
+        value:
+          - net-tools
+          - redhat-lsb
+      - name: autopart_options
+        parameter_type: string
+        value: "--type=plain --nohome --fstype=ext4"
+      - name: kernel_params
+        parameter_type: string
+        value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0"
+      - name: selinux-mode
+        parameter_type: string
+        value: "disabled"
+  - name: "CentOS"
+    description: "CentOS 9"
+    family: "Redhat"
+    major: "9"
+    minor: "0"
+    provisioning_templates:
+      - "Kickstart default iPXE"
+      - "Kickstart default"
+      - "Kickstart default PXELinux"
+      - "Kickstart default finish"
+      - "Kickstart default user data"
+    partition_tables:
+      - "Kickstart default"
+    architectures:
+      - x86_64
+    media: "CentOS 9 Stream"
+    parameters:
+      - name: additional-packages
+        parameter_type: yaml
+        value:
+          - net-tools
+          - redhat-lsb
+      - name: autopart_options
+        parameter_type: string
+        value: "--type=plain --nohome --fstype=ext4"
+      - name: kernel_params
+        parameter_type: string
+        value: "console=ttyS1,115200n8 console=tty1 net.ifnames=0 biosdevname=0"
+      - name: selinux-mode
+        parameter_type: string
+        value: "disabled"
+
+awx_url: http://10.0.10.155:8080
+awx_validate_ssl: false
+awx_admin_username: awx
+awx_admin_password: awxpass
+awx_docker_compose_dir: /var/lib/awxcompose
+awx_postgres_data_dir: /var/lib/awxpostgres
+awx_project_data_dir: /etc/ansible
 awx_postgres_database: awx
+awx_postgres_port: 5432
+awx_postgres_username: awx
+awx_postgres_password: awxpass
+awx_postgres_admin_password: postgrespass
+awx_github_deploy_key_file: id_rsa_github
+enable_awx_ldap_authentication: true
+awx_secret_key: shared_secret
+awx_host_config_key: 9931bad6-6526-4bf7-81b0-d56e67df3e00
 
-awx_host_port: 8080
-awx_server_url: 'http://awx.local:{{ awx_host_port }}'
-awx_validate_certs: false
-awx_admin_user: awxadmin
-awx_admin_passord: awxpassword
+awx_inventories:
+  - name: DEV - PrettyBaked.com
+    description: Hosts retrieved from Foreman
+    organization: 'Default'
+    source:
+      name: Foreman Hosts
+      credential: Foreman
+      kind: satellite6
+      verbosity: 2
+      update_on_launch: true
+      variables:
+        want_facts: true
+        want_host_group: true
+        want_hostcollections: false
+        want_params: true
+        group_prefix: ''
 
-ldap_authentication_sources:
-  - name: Local LDAP
-    host: 10.0.10.3
-    server: ldap.net.local
-    server_port: 389
-    server_tls: false
-    account: cn=Manager,dc=ldap,dc=net,dc=local
-    account_password: ldappassword
-    base_dn: dc=ldap,dc=net,dc=local
-    groups_base: ou=groups,dc=ldap,dc=net,dc=local
-    users_base: ou=users,dc=ldap,dc=net,dc=local
-    attr_login: uid
-    attr_firstname: givenName
-    attr_lastname: sn
-    attr_mail: mail
-    organizations:
-      - name: Default
-        admin_group_cn: admin
-        user_group_cn: users
-
-organizations:
-  - name: Default
-    locations:
-      - name: Default
-      - name: Warehouse A
-      - name: ITC
-
-awx_settings:
-  - name: SESSION_COOKIE_AGE
-    value: "28800"
-
-awx_foreman_inventory_config:
-  credential_name:
-  name: Foreman Inventory
-  organization: Default
-
-awx_extra_inventories: []
-
-awx_extra_inventory_sources: []
-
-awx_extra_credential_types: []
+awx_job_templates:
+  - name: Install/Upgrade Foreman Instance
+    project: Provisioning and Deployment
+    playbook: playbooks/foreman.yml
+    credentials:
+      - ansible-root
+      - ansible-vault
+  - name: Install/Upgrade AWX Instance
+    project: Provisioning and Deployment
+    playbook: playbooks/awx.yml
+    credentials:
+      - ansible-root
+      - ansible-vault
 
 awx_credentials:
-  - name: Ansible Root
+  - name: ansible-root
     credential_type: Machine
     inputs:
-      ssh_key_data: "{{ ansible_ssh_key }}"
-  - name: Ansible GitHub
-    credential_type: GitHub Personal Access Token
+      ssh_key_data: '{{ lookup("file", foreman_proxy_private_ssh_file) }}'
+  - name: ansible-github
+    credential_type: Source Control
     inputs:
-      token: '{{ awx_github_deploy_key }}'
+      ssh_key_data: '{{ lookup("file", awx_github_deploy_key_file) }}'
+  - name: ansible-vault
+    credential_type: Vault
+    inputs:
+      vault_id: ansible-vault
+      vault_password: vaultpassword
+  - name: Foreman
+    credential_type: Red Hat Satellite 6
+    inputs:
+      username: "{{ foreman.admin_username }}"
+      password: "{{ foreman.admin_password }}"
+      host: "{{ foreman.url }}"
+  - name: Galaxy
+    credential_type: Ansible Galaxy/Automation Hub API Token
+    inputs:
+      url: https://galaxy.ansible.com
+      token: galax_api_token
 
 awx_projects:
-  - name: AWX Home Project
-    description: AWX project for home services
+  - name: Provisioning and Deployment
+    description: Provision, Deploy and Configuration of Systems
     scm_type: git
-    scm_credentials: Ansible GitHub
+    scm_credential: ansible-github
     scm_clean: true
     scm_branch: main
     scm_update_on_launch: true
-    scm_url: git@github.com:my/repo.git
-    local_path: awx-home
+    scm_url: git@github.com:constructorfleet/deployment-configuration-awx.git
+    local_path: deployment-configuration-awx
 
-foreman_admin_user: foremanadmin
-foreman_admin_password: foremanpass
-foreman_remote_execution_ssh_keys:
-  - '{{ foreman_ssh_public_key_data }}'
-foreman_bmc_username: admin
-foreman_bmc_password: bmcpass
-foreman_user_ssh_key_data: '{{ foreman_ssh_key_data }}'
-foreman_user_ssh_public_key_data: '{{ foreman_ssh_public_key_data }}'
-foreman_proxy_ssh_key_data: '{{ foreman_ssh_key_data }}'
-foreman_proxy_ssh_public_key_data: '{{ foreman_ssh_public_key_data }}'
-
-foreman_compute_plugins:
-  - libvirt
-
-foreman_internal_usergroups:
-  - name: administrators
-    admin: yes
-  - name: managers
-    admin: no
-    roles:
-      - Manager
-foreman_external_usergroups:
-  - name: admin
-    auth_source: LDAP Auth
-    usergroup: administrators
-  - name: users
-    auth_source: LDAP Auth
-    usergroup: managers
+ldap_server_ip: 10.0.10.15
+ldap_server: ldap.home.prettybaked.com
+ldap_server_port: 389
+ldap_server_tls: false
+ldap_account_cn: Manager
+ldap_account_password: ldappass
+ldap_groups_dn: groups
+ldap_users_dn: users
+ldap_uid_attr: uid
+ldap_firstname_attr: givenName
+ldap_lastname_attr: sn
+ldap_email_attr: mail
+ldap_photo_attr: jpegPhoto

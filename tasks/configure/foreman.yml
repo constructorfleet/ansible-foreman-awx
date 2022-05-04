@@ -1,8 +1,233 @@
 ---
 
-- name: Configure Foreman LDAP Authentication Sources
-  ansible.builtin.include_role:
-    name: theforeman.foreman.auth_sources_ldap
-  when:
-    - foreman_auth_sources_ldap is defined
-    - foreman_auth_sources_ldap is sequence
+- name: Configure Foreman
+  block:
+    - name: "Update global parameters"
+      theforeman.foreman.global_parameter:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        parameter_type: "{{ item.parameter_type | default('string') }}"
+        state: "{{ item.state | default('present') }}"
+      loop: '{{ foreman_global_parameters }}'
+      loop_control:
+        label: '{{ item.name }}: {{ item.value }}'
+
+    - name: Configure Foreman Settings
+      ansible.builtin.include_role:
+        name: theforeman.foreman.settings
+      vars:
+        foreman_settings:
+          - name: entries_per_page
+            value: 20
+          - name: use_shortname_for_vms
+            value: true
+          - name: idle_timeout
+            value: 480
+          - name: destroy_vm_on_host_delete
+            value: true
+
+    - name: Configure Foreman LDAP Authentication Sources
+      ansible.builtin.include_role:
+        name: theforeman.foreman.auth_sources_ldap
+
+    - name: Configure Foreman Usergroups
+      theforeman.foreman.usergroup:
+        name: '{{ usergroup.name }}'
+        admin: '{{ usergroup.admin | default(False) }}'
+        roles: '{{ usergroup.roles | default(omit) }}' # TODO
+        users: '{{ usergroup.users | default(omit) }}'
+        usergroups: '{{ usergroups.usergroups | default(omit) }}'
+        state: '{{ usergroup.state | default("present") }}'
+      loop: '{{ organizations | selectattr("usergroups", "defined") | list | map(attribute="usergroups") | flatten }}'
+      loop_control:
+        loop_var: usergroup
+        label: '{{ usergroup.name }}'
+
+    - name: Configure Foreman External Usergroups
+      theforeman.foreman.external_usergroup:
+        name: '{{ usergroup.ldap_cn }}'
+        auth_source_ldap: '{{ ldap_authentication.server }}'
+        usergroup: '{{ usergroup.name }}'
+        state: '{{ usergroup.state | default("present") }}' # TODO
+      loop: |-
+        {{
+            organizations
+              | selectattr('usergroups', 'defined')
+              | map(attribute="usergroups")
+              | flatten
+              | selectattr('ldap_cn', 'defined')
+              | list
+              | default([])
+        }}
+      loop_control:
+        loop_var: usergroup
+        label: '{{ usergroup.name }}'
+
+    - name: Configure Foreman Domains
+      theforeman.foreman.domain:
+        name: '{{ domain.name }}'
+        description: '{{ domain.description | default(domain.name) }}'
+        parameters: '{{ domain.parameters | default(omit) }}'
+        dns_proxy: '{{ (domain.dns_proxy | default(omit)) if (foreman_proxy_dns | default(False)) else omit }}'
+        state: '{{ doman.state | default("present") }}'
+      loop: '{{ domains | default([]) }}'
+      loop_control:
+        loop_var: domain
+        label: '{{ domain.name }}'
+
+    - name: Configure Foreman Subnets
+      theforeman.foreman.subnet:
+        name: "{{ subnet.name }}"
+        description: "{{ subnet.description | default(subnet.name) }}"
+        network: "{{ subnet.network }}"
+        mask: "{{ subnet.mask | default(omit) }}"
+        cidr: "{{ subnet.cidr | default(omit) }}"
+        gateway: "{{ subnet.gateway }}"
+        from_ip: "{{ subnet.from_ip | default(omit) }}"
+        to_ip: "{{ subnet.to_ip | default(omit) }}"
+        ipam: "{{ subnet.ipam | default(omit) }}"
+        dns_primary: "{{ subnet.dns_primary | default(omit) }}"
+        dns_secondary: "{{ subnet.dns_secondary | default(omit) }}"
+        boot_mode: "{{ subnet.boot_mode | default('Static') }}"
+        domains: "{{ subnet.domains | default(omit) }}"
+        vlanid: "{{ subnet.vlanid | default(omit) }}"
+        mtu: "{{ subnet.mtu | default(1500) }}"
+        parameters: "{{ subnet.parameters | default(omit) }}"
+        organizations: "{{ subnet.organizations | default(omit) }}"
+        locations: "{{ subnet.locations | default(omit) }}"
+        discovery_proxy: "{{ (subnet.discovery_proxy | default(omit)) if (foreman_proxy_dhcp | default(False)) else omit }}"
+        dhcp_proxy: "{{ (subnet.dhcp_proxy | default(omit)) if (foreman_proxy_dhcp | default(False)) else omit }}"
+        tftp_proxy: "{{ (subnet.tftp_proxy | default(omit)) if (foreman_proxy_tftp | default(False)) else omit }}"
+        dns_proxy: "{{ (subnet.dns_proxy | default(omit)) if (foreman_proxy_tftp | default(False)) else omit }}"
+        httpboot_proxy: "{{ (subnet.httpboot_proxy | default(omit)) if (foreman_proxy_tftp | default(False)) else omit }}"
+        remote_execution_proxies: "{{ (subnet.remote_execution_proxies | default(omit)) if (foreman_proxy_remote_exec | default(False)) else omit }}"
+        state: '{{ subnet.state | default("present") }}'
+      loop: '{{ foreman_subnets | default([]) }}'
+      loop_control:
+        loop_var: subnet
+        label: '{{ subnet.name }}'
+
+    - name: Configure Foreman Installation Media
+      theforeman.foreman.installation_medium:
+        name: "{{ installation_media.name }}"
+        os_family: "{{ installation_media.os_family }}"
+        path: "{{ installation_media.path | default(omit) }}"
+        organizations: "{{ installation_media.organizations | default(foreman_organization) }}"
+        locations: "{{ installation_media.locations | default(foreman_location) }}"
+        state: '{{ installation_media.state | default("present") }}'
+      loop: '{{ foreman_installation_media | default([]) }}'
+      loop_control:
+        loop_var: installation_media
+        label: '{{ installation_media.name }}'
+
+    - name: Configure Foreman Operating Systems
+      theforeman.foreman.operatingsystem:
+        name: "{{ os.name }}"
+        description: "{{ os.description | default(os.name) }}"
+        release_name: "{{ os.release_name | default(omit) }}"
+        os_family: "{{ os.family }}"
+        major: "{{ os.major }}"
+        minor: "{{ os.minor }}"
+        media: "{{ os.media }}"
+        provisioning_templates: "{{ os.provisioning_templates | default(omti) }}"
+        ptables: "{{ os.partition_tables | default(omit) }}"
+        architectures: "{{ os.architectures }}"
+        password_hash: "{{ os.passsword_hash | default('SHA256') }}"  # noqa no-log-password
+        parameters: "{{ os.parameters | default(omit) }}"
+        state: '{{ os.state | default("present") }}'
+      loop: '{{ foreman_operating_systems | default([]) }}'
+      loop_control:
+        loop_var: os
+        label: '{{ os.name }}'
+
+    - name: Configure Foreman Compute Resources
+      theforeman.foreman.compute_resource:
+        name: '{{ resource.name }}'
+        provider: '{{ resource.provider }}'
+        provider_params:
+          url: qemu+tcp://10.0.10.100/system
+          display_type: vnc
+      loop: '{{ foreman_compute_resources | default([]) }}'
+      loop_control:
+        loop_var: resource
+        label: '{{ resource.name }}'
+
+    - name: Configure Foreman Host Groups
+      theforeman.foreman.hostgroup:
+        name: "{{ hostgroup.name }}"
+        description: "{{ hostgroup.description | default(omit) }}"
+        architecture: "{{ hostgroup.architecture | default(omit) }}"
+        operatingsystem: "{{ hostgroup.operatingsystem | default(omit) }}"
+        medium: "{{ hostgroup.medium | default(omit) }}"
+        ptable: "{{ hostgroup.ptable | default(omit) }}"
+        pxe_loader: "{{ hostgroup.pxe_loader | default(omit) }}"
+        domain: "{{ hostgroup.domain | default(omit) }}"
+        subnet: "{{ hostgroup.subnet | default(omit) }}"
+        locations: "{{ hostgroup.locations | default(omit) }}"
+        organization: "{{ hostgroup.organizations | default(omit) }}"
+        parent: "{{ hostgroup.parent | default(omit) }}"
+        compute_resource: "{{ hostgroup.compute_resource | default(omit) }}"
+        parameters: "{{ hostgroup.parameters | default(omit) }}"
+      loop: '{{ hostgroups | default([]) }}'
+      loop_control:
+        loop_var: hostgroup
+        label: '{{ hostgroup.name }}'
+
+    - name: Configrue Foreman Installation Media
+      theforeman.foreman.installation_medium:
+        name: "{{ installation_media.name }}"
+        os_family: "{{ installation_media.os_family }}"
+        path: "{{ installation_media.path | default(omit) }}"
+        organizations: "{{ installation_media.organizations | default(foreman_organization) }}"
+        locations: "{{ installation_media.locations | default(foreman_location) }}"
+        state: '{{ installation_media.state | default("present") }}'
+      loop: '{{ foreman_installation_media | default([]) }}'
+      loop_control:
+        loop_var: installation_media
+        label: '{{ installation_media.name }}'
+
+    - name: Configrue Foreman Operating Systems
+      theforeman.foreman.operatingsystem:
+        name: "{{ os.name }}"
+        description: "{{ os.description | default(os.name) }}"
+        release_name: "{{ os.release_name | default(omit) }}"
+        os_family: "{{ os.family }}"
+        major: "{{ os.major }}"
+        minor: "{{ os.minor }}"
+        media: "{{ os.media }}"
+        provisioning_templates: "{{ os.provisioning_templates | default(omti) }}"
+        ptables: "{{ os.partition_tables | default(omit) }}"
+        architectures: "{{ os.architectures }}"
+        password_hash: "{{ os.passsword_hash | default('SHA256') }}"  # noqa no-log-password
+        parameters: "{{ os.parameters | default(omit) }}"
+        state: '{{ os.state | default("present") }}'
+      loop: '{{ foreman_operating_systems | default([]) }}'
+      loop_control:
+        loop_var: os
+        label: '{{ os.name }}'
+
+#        - name: Configure Foreman Discovery Rules
+#          foreman_discovery_rule:
+#            name: "{{ rule.name }}"
+#            search: "{{ rule.search }}"
+#            hostgroup: "{{ rule.hostgroup }}"
+#            organizations: "{{ rule.organizations | default(foreman_organization) }}"
+#            locations: "{{ rule.locations | default(foreman_location) }}"
+#            priority: "{{ rule.priority | default(omit) }}"
+#            max_count: "{{ rule.max_count | default(omit) }}"
+#            enabled: "{{ rule.enabled | default(True) }}"
+#            hostname: "{{ rule.hostname | default(omit) }}"
+#            state: '{{ rule.state | default("present") }}'
+#          loop: '{{ foreman_discovery_rules | default([]) }}'
+#          loop_control:
+#            loop_var: rule
+#            label: '{{ rule.name }}'
+#          when:
+#            - "'enable-foreman-plugin-discovery' in foreman_options or 'enable-foreman-proxy-plugin-discovery' in foreman_options"
+  environment:  # theforeman.foreman collection does not utilize no_log on password argument - set ENV instead
+    FOREMAN_SERVER_URL: '{{ foreman_url }}'
+    FOREMAN_USERNAME: '{{ foreman_admin_username }}'
+    FOREMAN_PASSWORD: '{{ foreman_admin_password }}'
+    FOREMAN_VALIDATE_CERTS: '{{ foreman_url_valdiate_certs }}'
+  tags:
+    - configure-foreman
